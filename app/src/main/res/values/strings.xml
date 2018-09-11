@@ -1,0 +1,35 @@
+<resources>
+    <string name="app_name">Theremin</string>
+    <string name="togglebutton">ToggleButton</string>
+    <string name="tone_placeholder">X#</string>
+
+
+    <string-array name="keys_array">
+        <item>C-Dur</item>
+        <item>G-Dur</item>
+        <item>D-Dur</item>
+        <item>A-Dur</item>
+        <item>E-Dur</item>
+        <item>B-Dur</item>
+        <item>F#-Dur</item>
+        <item>F-Dur</item>
+        <item>Bb-Dur</item>
+        <item>Eb-Dur</item>
+        <item>Ab-Dur</item>
+        <item>Db-Dur</item>
+        <item>Gb-Dur</item>
+        <item>A-Moll</item>
+        <item>E-Moll</item>
+        <item>B-Moll</item>
+        <item>F#-Moll</item>
+        <item>C#-Moll</item>
+        <item>G#-Moll</item>
+        <item>D#-Moll</item>
+        <item>D-Moll</item>
+        <item>G-Moll</item>
+        <item>C-Moll</item>
+        <item>F-Moll</item>
+        <item>Bb-Moll</item>
+        <item>Eb-Moll</item>
+    </string-array>
+</resources>
