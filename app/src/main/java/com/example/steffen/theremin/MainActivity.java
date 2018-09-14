@@ -1,5 +1,9 @@
 package com.example.steffen.theremin;
 
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -7,17 +11,27 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
+
 import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
-    ImageButton btPlay;
-    ImageButton btPause;
-    Button btPlus;
-    Button btMinus;
+    private ImageButton btPlay;
+
+    private SensorManager sensorManager;
+    Sensor lightSensor;
+    SensorEventListener lightEventListener;
+    private LightSensorHelper lightSensorHelper = new LightSensorHelper();
+
+    private int previousValue;
+
+    private int countCalibrator = 5;
+    private int[] valuesForCalibration = new int[countCalibrator];
+    //private int averageCalibrationValue;
+    private int maxValue;
+
 
     TextView tone;
 
@@ -31,10 +45,74 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         btPlay = (ImageButton) findViewById(R.id.playButton);
-        btPause = (ImageButton) findViewById(R.id.pauseButton);
-        btPlus = (Button) findViewById(R.id.plusButton);
-        btMinus = (Button) findViewById(R.id.minusButton);
         tone = (TextView) findViewById(R.id.currentTone);
+
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+
+        lightEventListener = new SensorEventListener() {
+            @Override
+            public void onSensorChanged(SensorEvent sensorEvent) {
+                int currentValue = (int) sensorEvent.values[0];
+
+                if(!lightSensorHelper.isCalibrated()) {
+                    if(countCalibrator > 0 && previousValue != currentValue){
+                        Log.i("Calibrator", "onSensorChanged: not calibrated ("+countCalibrator+" left)");
+                        valuesForCalibration[countCalibrator-1] = currentValue;
+                        countCalibrator--;
+                    } else if(countCalibrator <= 0) {
+                        Log.i("Calibrator", "onSensorChanged: is calibrated !!!");
+                        lightSensorHelper.updateCalibrationStatus(true);
+                    }
+                    previousValue = currentValue;
+
+                } else if (lightSensorHelper.isCalibrated()) {
+                    btPlay.setVisibility(View.VISIBLE);
+                    //averageCalibrationValue = lightSensorHelper.calculateAverageValue(valuesForCalibration);
+                    maxValue = lightSensorHelper.calculateMaxValue(valuesForCalibration);
+                    int toleranceRange = (int) maxValue / toneGeneratorHelper.getScale().length;
+                    //Log.i("UP/DOWN", "Toleranz" +toleranceRange);
+                    //Log.i("UP/DOWN", "MaxValue" + maxValue);
+                    Log.i("ScaleIndex", "ScaleIndex" + currentScaleIndex);
+
+                    if (maxValue - toleranceRange > currentValue && currentScaleIndex < toneGeneratorHelper.getScale().length-1) {
+                        Log.i("UP", "UP/DOWN: UP");
+                        if(maxValue -toleranceRange <0){
+                            lightSensorHelper.updateMaxCalibrationValue(lightSensorHelper.calculateMaxValue(valuesForCalibration),"max");
+                        } else {
+                            lightSensorHelper.updateMaxCalibrationValue(toleranceRange,"up");
+                        }
+
+                        showTone();
+                        currentScaleIndex++;
+                        //toneGenerator.stop();
+                        toneGenerator.m_ifreq = Integer.parseInt(toneGeneratorHelper.getScale()[currentScaleIndex][0]);
+                        //toneGenerator.play();
+
+                    } else if (maxValue + toleranceRange > currentValue && currentScaleIndex > 0) {
+                        Log.i("DOWN", "UP/DOWN: DOWN");
+                        if(maxValue - toleranceRange < 0){
+                            lightSensorHelper.updateMaxCalibrationValue(0,"zero");
+                        } else {
+                            lightSensorHelper.updateMaxCalibrationValue(toleranceRange,"down");
+                        }
+
+                        showTone();
+                        currentScaleIndex--;
+                        //toneGenerator.stop();
+                        toneGenerator.m_ifreq = Integer.parseInt(toneGeneratorHelper.getScale()[currentScaleIndex][0]);
+                        //toneGenerator.play();
+
+                    }
+                    previousValue = currentValue;
+                }
+            }
+
+            @Override
+            public void onAccuracyChanged(Sensor sensor, int i) {
+
+            }
+        };
 
         Spinner keys = (Spinner) findViewById(R.id.keysSpinner);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.keys_array, android.R.layout.simple_spinner_dropdown_item);
@@ -59,63 +137,45 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                if(lightSensorHelper.isCalibrated()) {
 
-                switch (event.getAction()){
-                    case MotionEvent.ACTION_DOWN:{
+                    switch (event.getAction()) {
+                        case MotionEvent.ACTION_DOWN: {
 
-                        btPlay.setVisibility(View.GONE);
-                        btPause.setVisibility(View.VISIBLE);
-                        toneGenerator.m_ifreq = Integer.parseInt(toneGeneratorHelper.getScale()[currentScaleIndex][0]);
-                        toneGenerator.sampleRate = toneGeneratorHelper.getSampleRate();
-                        toneGenerator.play();
-                        showTone();
-                        Log.i("Key", "Name: " + toneGeneratorHelper.getScale()[currentScaleIndex][1] + " Frequenz: " + toneGeneratorHelper.getScale()[currentScaleIndex][0]);
+                            toneGenerator.m_ifreq = Integer.parseInt(toneGeneratorHelper.getScale()[currentScaleIndex][0]);
+                            toneGenerator.sampleRate = toneGeneratorHelper.getSampleRate();
+                            toneGenerator.play();
+                            showTone();
+                            Log.i("Key", "Name: " + toneGeneratorHelper.getScale()[currentScaleIndex][1] + " Frequenz: " + toneGeneratorHelper.getScale()[currentScaleIndex][0]);
 
-                        break;
-                    }
+                            break;
+                        }
 
-                    // Wenn Button losgelassen
-                    case MotionEvent.ACTION_UP:{
-                        btPause.setVisibility(View.GONE);
-                        btPlay.setVisibility(View.VISIBLE);
-                        toneGenerator.stop();
+                        case MotionEvent.ACTION_UP: {
 
-                        break;
+                            toneGenerator.stop();
+
+                            break;
+                        }
                     }
                 }
-                return false;
+                    return false;
+
             }
 
         });
+    }
 
-        btPlus.setOnClickListener(new View.OnClickListener() {
+    @Override
+    protected void onResume() {
+        super.onResume();
+        sensorManager.registerListener(lightEventListener, lightSensor, SensorManager.SENSOR_DELAY_FASTEST);
+    }
 
-            @Override
-            public void onClick(View v) {
-                if( currentScaleIndex < toneGeneratorHelper.getScale().length - 1){
-                    currentScaleIndex++;
-                    toneGenerator.stop();
-                    toneGenerator.m_ifreq = Integer.parseInt(toneGeneratorHelper.getScale()[currentScaleIndex][0]);
-                    toneGenerator.play();
-                    showTone();
-                }
-            }
-        });
-
-
-        btMinus.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                if( currentScaleIndex > 0){
-                    currentScaleIndex--;
-                    toneGenerator.stop();
-                    toneGenerator.m_ifreq = Integer.parseInt(toneGeneratorHelper.getScale()[currentScaleIndex][0]);
-                    toneGenerator.play();
-                    showTone();
-                }
-            }
-        });
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sensorManager.unregisterListener(lightEventListener);
     }
 
     public void showTone(){

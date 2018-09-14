@@ -39,7 +39,7 @@ public class ToneGeneratorHelper {
             {G, "G"},
             {A, "A"},
             {B, "B"},
-            {C2, "C"}
+            {C2, "C2"}
     };
 
     // A-Moll
