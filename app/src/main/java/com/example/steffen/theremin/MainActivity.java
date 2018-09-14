@@ -3,6 +3,7 @@ package com.example.steffen.theremin;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -24,8 +25,6 @@ public class MainActivity extends AppCompatActivity {
 
     ToneGeneratorHelper toneGeneratorHelper = new ToneGeneratorHelper();
     com.example.steffen.theremin.ToneGenerator toneGenerator = new com.example.steffen.theremin.ToneGenerator();
-
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -56,31 +55,37 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        btPlay.setOnClickListener(new View.OnClickListener() {
+        btPlay.setOnTouchListener(new View.OnTouchListener() {
 
             @Override
-            public void onClick(View v) {
+            public boolean onTouch(View v, MotionEvent event) {
 
-                btPlay.setVisibility(View.GONE);
-                btPause.setVisibility(View.VISIBLE);
-                toneGenerator.m_ifreq = Integer.parseInt(toneGeneratorHelper.getScale()[currentScaleIndex][0]);
-                toneGenerator.sampleRate = toneGeneratorHelper.getSampleRate();
-                toneGenerator.play();
-                showTone();
-                Log.i("Key", "Name: " + toneGeneratorHelper.getScale()[currentScaleIndex][1] + " Frequenz: " + toneGeneratorHelper.getScale()[currentScaleIndex][0]);
+                switch (event.getAction()){
+                    case MotionEvent.ACTION_DOWN:{
+
+                        btPlay.setVisibility(View.GONE);
+                        btPause.setVisibility(View.VISIBLE);
+                        toneGenerator.m_ifreq = Integer.parseInt(toneGeneratorHelper.getScale()[currentScaleIndex][0]);
+                        toneGenerator.sampleRate = toneGeneratorHelper.getSampleRate();
+                        toneGenerator.play();
+                        showTone();
+                        Log.i("Key", "Name: " + toneGeneratorHelper.getScale()[currentScaleIndex][1] + " Frequenz: " + toneGeneratorHelper.getScale()[currentScaleIndex][0]);
+
+                        break;
+                    }
+
+                    // Wenn Button losgelassen
+                    case MotionEvent.ACTION_UP:{
+                        btPause.setVisibility(View.GONE);
+                        btPlay.setVisibility(View.VISIBLE);
+                        toneGenerator.stop();
+
+                        break;
+                    }
+                }
+                return false;
             }
-        });
 
-
-        btPause.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                btPause.setVisibility(View.GONE);
-                btPlay.setVisibility(View.VISIBLE);
-                toneGenerator.stop();
-
-            }
         });
 
         btPlus.setOnClickListener(new View.OnClickListener() {
