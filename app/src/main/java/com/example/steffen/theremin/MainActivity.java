@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
     int limitMax = 0;
     int limitMin = 0;
     int toleranceRange;
+    boolean isPlayTone = false;
 
 
     TextView tone;
@@ -69,12 +70,12 @@ public class MainActivity extends AppCompatActivity {
                         toleranceRange = (int) maxValue / toneGeneratorHelper.getScale().length;
                         limitMax = maxValue;
                         limitMin = maxValue - toleranceRange;
+                        btPlay.setVisibility(View.VISIBLE);
+                        calibrationText.setText("press and hold the Playbutton");
                     }
                     previousValue = currentValue;
 
-                } else if (lightSensorHelper.isCalibrated()) {
-                    calibrationText.setText("Press and hold the play butten");
-                    btPlay.setVisibility(View.VISIBLE);
+                } else if (lightSensorHelper.isCalibrated() && isPlayTone) {
                     int toleranceRange = (int) maxValue / toneGeneratorHelper.getScale().length;
 
                     if (limitMax < currentValue && currentScaleIndex < toneGeneratorHelper.getScale().length-1 ) {
@@ -87,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                         toneGenerator.m_ifreq = Integer.parseInt(toneGeneratorHelper.getScale()[currentScaleIndex][0]);
+                        showTone();
 
                     } else if (limitMin > currentValue && currentScaleIndex > 0) {
                         limitMax = limitMin;
@@ -99,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                         toneGenerator.m_ifreq = Integer.parseInt(toneGeneratorHelper.getScale()[currentScaleIndex][0]);
+                        showTone();
                     }
 
                     previousValue = currentValue;
@@ -141,15 +144,17 @@ public class MainActivity extends AppCompatActivity {
                             toneGenerator.m_ifreq = Integer.parseInt(toneGeneratorHelper.getScale()[currentScaleIndex][0]);
                             toneGenerator.sampleRate = toneGeneratorHelper.getSampleRate();
                             toneGenerator.play();
+                            isPlayTone = true;
                             showTone();
 
                             break;
                         }
 
                         case MotionEvent.ACTION_UP: {
+                            isPlayTone = false;
                             calibrationText.setVisibility(View.VISIBLE);
                             toneGenerator.stop();
-                            tone.setVisibility(View.INVISIBLE);
+                            tone.setVisibility(View.GONE);
                             break;
                         }
                     }
