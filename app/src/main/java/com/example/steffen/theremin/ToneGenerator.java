@@ -6,10 +6,10 @@ import android.media.AudioTrack;
 import android.util.Log;
 
 class ToneGenerator {
-    int sampleRate = 8000;
+    int sampleRate;
     double sample[] = null;
     byte generatedSnd[] = null;
-    int m_ifreq = 400;
+    int m_ifreq;
     Thread m_PlayThread = null;
     boolean m_bStop = false;
     AudioTrack m_audioTrack = null;

@@ -183,7 +183,7 @@ public class ToneGeneratorHelper {
             {B, "B"},
             {CIS2, "C#"},
             {DIS2, "D#"},
-            {F2, "F#"}, //enharmonische Verwechslung
+            {F2, "E#"}, //enharmonische Verwechslung
             {FIS2, "F#"}
     };
 

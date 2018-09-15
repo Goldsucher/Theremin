@@ -6,7 +6,6 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
@@ -27,15 +26,19 @@ public class MainActivity extends AppCompatActivity {
 
     private int previousValue;
 
-    private int countCalibrator = 5;
+    private int countCalibrator = 50;
     private int[] valuesForCalibration = new int[countCalibrator];
-    //private int averageCalibrationValue;
     private int maxValue;
+
+    int limitMax = 0;
+    int limitMin = 0;
+    int toleranceRange;
 
 
     TextView tone;
+    TextView calibrationText;
 
-    int currentScaleIndex = 0;
+    int currentScaleIndex = 7;
 
     ToneGeneratorHelper toneGeneratorHelper = new ToneGeneratorHelper();
     com.example.steffen.theremin.ToneGenerator toneGenerator = new com.example.steffen.theremin.ToneGenerator();
@@ -49,61 +52,55 @@ public class MainActivity extends AppCompatActivity {
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+        calibrationText = (TextView) findViewById(R.id.calibration);
 
         lightEventListener = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent sensorEvent) {
                 int currentValue = (int) sensorEvent.values[0];
-
+                getSupportActionBar().setTitle("Luminosity : " + currentValue);
                 if(!lightSensorHelper.isCalibrated()) {
                     if(countCalibrator > 0 && previousValue != currentValue){
-                        Log.i("Calibrator", "onSensorChanged: not calibrated ("+countCalibrator+" left)");
                         valuesForCalibration[countCalibrator-1] = currentValue;
                         countCalibrator--;
                     } else if(countCalibrator <= 0) {
-                        Log.i("Calibrator", "onSensorChanged: is calibrated !!!");
                         lightSensorHelper.updateCalibrationStatus(true);
+                        maxValue = lightSensorHelper.calculateMaxValue(valuesForCalibration);
+                        toleranceRange = (int) maxValue / toneGeneratorHelper.getScale().length;
+                        limitMax = maxValue;
+                        limitMin = maxValue - toleranceRange;
                     }
                     previousValue = currentValue;
 
                 } else if (lightSensorHelper.isCalibrated()) {
+                    calibrationText.setVisibility(View.GONE);
                     btPlay.setVisibility(View.VISIBLE);
-                    //averageCalibrationValue = lightSensorHelper.calculateAverageValue(valuesForCalibration);
-                    maxValue = lightSensorHelper.calculateMaxValue(valuesForCalibration);
                     int toleranceRange = (int) maxValue / toneGeneratorHelper.getScale().length;
-                    //Log.i("UP/DOWN", "Toleranz" +toleranceRange);
-                    //Log.i("UP/DOWN", "MaxValue" + maxValue);
-                    Log.i("ScaleIndex", "ScaleIndex" + currentScaleIndex);
 
-                    if (maxValue - toleranceRange > currentValue && currentScaleIndex < toneGeneratorHelper.getScale().length-1) {
-                        Log.i("UP", "UP/DOWN: UP");
-                        if(maxValue -toleranceRange <0){
-                            lightSensorHelper.updateMaxCalibrationValue(lightSensorHelper.calculateMaxValue(valuesForCalibration),"max");
+                    if (limitMax < currentValue && currentScaleIndex < toneGeneratorHelper.getScale().length-1 ) {
+                        limitMin = limitMax;
+                        limitMax = limitMax + toleranceRange;
+                        if(limitMax > maxValue) {
+                            limitMax = maxValue;
                         } else {
-                            lightSensorHelper.updateMaxCalibrationValue(toleranceRange,"up");
+                            currentScaleIndex++;
                         }
 
-                        showTone();
-                        currentScaleIndex++;
-                        //toneGenerator.stop();
                         toneGenerator.m_ifreq = Integer.parseInt(toneGeneratorHelper.getScale()[currentScaleIndex][0]);
-                        //toneGenerator.play();
 
-                    } else if (maxValue + toleranceRange > currentValue && currentScaleIndex > 0) {
-                        Log.i("DOWN", "UP/DOWN: DOWN");
-                        if(maxValue - toleranceRange < 0){
-                            lightSensorHelper.updateMaxCalibrationValue(0,"zero");
+                    } else if (limitMin > currentValue && currentScaleIndex > 0) {
+                        limitMax = limitMin;
+                        limitMin = limitMin - toleranceRange;
+
+                        if(limitMin < 0) {
+                            limitMin = 0;
                         } else {
-                            lightSensorHelper.updateMaxCalibrationValue(toleranceRange,"down");
+                            currentScaleIndex--;
                         }
 
-                        showTone();
-                        currentScaleIndex--;
-                        //toneGenerator.stop();
                         toneGenerator.m_ifreq = Integer.parseInt(toneGeneratorHelper.getScale()[currentScaleIndex][0]);
-                        //toneGenerator.play();
-
                     }
+                    showTone();
                     previousValue = currentValue;
                 }
             }
@@ -121,10 +118,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String spinnerItem=parent.getItemAtPosition(position).toString();
-                Log.i("Spinner", "onItemSelected: " + spinnerItem);
 
                 toneGeneratorHelper.setScale((String[][]) toneGeneratorHelper.getScaleMap().get(spinnerItem));
-                currentScaleIndex = 0;
+                currentScaleIndex = 7;
             }
 
             @Override
@@ -146,7 +142,6 @@ public class MainActivity extends AppCompatActivity {
                             toneGenerator.sampleRate = toneGeneratorHelper.getSampleRate();
                             toneGenerator.play();
                             showTone();
-                            Log.i("Key", "Name: " + toneGeneratorHelper.getScale()[currentScaleIndex][1] + " Frequenz: " + toneGeneratorHelper.getScale()[currentScaleIndex][0]);
 
                             break;
                         }
