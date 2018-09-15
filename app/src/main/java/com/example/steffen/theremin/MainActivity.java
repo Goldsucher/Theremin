@@ -10,7 +10,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-
 import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -26,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
 
     private int previousValue;
 
-    private int countCalibrator = 50;
+    private int countCalibrator = 5;
     private int[] valuesForCalibration = new int[countCalibrator];
     private int maxValue;
 
@@ -64,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
                         valuesForCalibration[countCalibrator-1] = currentValue;
                         countCalibrator--;
                     } else if(countCalibrator <= 0) {
+
                         lightSensorHelper.updateCalibrationStatus(true);
                         maxValue = lightSensorHelper.calculateMaxValue(valuesForCalibration);
                         toleranceRange = (int) maxValue / toneGeneratorHelper.getScale().length;
@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
                     previousValue = currentValue;
 
                 } else if (lightSensorHelper.isCalibrated()) {
-                    calibrationText.setVisibility(View.GONE);
+                    calibrationText.setText("Press and hold the play butten");
                     btPlay.setVisibility(View.VISIBLE);
                     int toleranceRange = (int) maxValue / toneGeneratorHelper.getScale().length;
 
@@ -100,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
 
                         toneGenerator.m_ifreq = Integer.parseInt(toneGeneratorHelper.getScale()[currentScaleIndex][0]);
                     }
-                    showTone();
+
                     previousValue = currentValue;
                 }
             }
@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
 
                     switch (event.getAction()) {
                         case MotionEvent.ACTION_DOWN: {
-
+                            calibrationText.setVisibility(View.GONE);
                             toneGenerator.m_ifreq = Integer.parseInt(toneGeneratorHelper.getScale()[currentScaleIndex][0]);
                             toneGenerator.sampleRate = toneGeneratorHelper.getSampleRate();
                             toneGenerator.play();
@@ -147,9 +147,9 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                         case MotionEvent.ACTION_UP: {
-
+                            calibrationText.setVisibility(View.VISIBLE);
                             toneGenerator.stop();
-
+                            tone.setVisibility(View.INVISIBLE);
                             break;
                         }
                     }
