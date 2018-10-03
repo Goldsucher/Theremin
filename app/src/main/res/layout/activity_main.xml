@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorPrimary"
+    android:keepScreenOn="true"
     tools:context=".MainActivity">
 
     <ImageView
@@ -26,33 +27,7 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:scaleType="fitXY"
-        android:visibility="visible" />
-
-    <ImageButton
-        android:id="@+id/pauseButton"
-        style="@android:style/MediaButton.Pause"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:scaleType="fitCenter"
         android:visibility="gone" />
-
-    <Button
-        android:id="@+id/plusButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"
-        android:text="PLUS" />
-
-    <Button
-        android:id="@+id/minusButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentStart="true"
-        android:text="MINUS" />
 
     <TextView
         android:id="@+id/currentTone"
@@ -60,13 +35,26 @@
         android:layout_height="318dp"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="44dp"
-        android:text="@string/tone_placeholder"
+        android:layout_marginTop="84dp"
         android:textAlignment="center"
         android:textAppearance="@android:style/TextAppearance.Material.Large"
         android:textColor="@android:color/background_light"
         android:textSize="260sp"
         android:visibility="invisible" />
+
+    <TextView
+        android:id="@+id/calibration"
+        android:layout_width="339dp"
+        android:layout_height="138dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="174dp"
+        android:text="calibrating ..."
+        android:textAlignment="center"
+        android:textAppearance="@android:style/TextAppearance.Material.Large"
+        android:textColor="@android:color/background_light"
+        android:textSize="50sp"
+        android:visibility="visible" />
 
     <Spinner
         android:id="@+id/keysSpinner"
